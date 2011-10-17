@@ -99,8 +99,9 @@ void process_key (DBusGProxy* dbus_proxy, const char* not_used, const char* key_
     int output_state = 0;
     gboolean is_playing = FALSE;
 
-    if ((*deadbeef).conf_get_int("gnome_mmkeys.enable", 0) == 0)
+    if ((*deadbeef).conf_get_int("gnome_mmkeys.enable", 0) == 0) {
         return;
+    }
 
     output = (*deadbeef).get_output();
     output_state = (*output).state();

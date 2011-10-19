@@ -1,12 +1,14 @@
 DeaDBeeF player Gnome multimedia keys plugin
+Author Ruslan Khusnullin <ruslan.khusnullin@gmail.com>
 
 It adds support for Gnome multimedia keys to DeaDBeeF player.
 
 To build:
+* You need deadbeef-plugins-dev package installed to have deadbeef.h
 
-$ make
+$ ./build.sh
 
 To install:
 
-$ make install
+$ sudo ./install.sh
 (copies .so file to /usr/lib/deadbeef/)

@@ -35,6 +35,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <dbus/dbus-glib.h>
+#include <deadbeef/deadbeef.h>
 // gnome_mmkeys_marshal.h was built using
 // marshal.list file with one line:
 // VOID:STRING,STRING
@@ -43,50 +44,9 @@
 // also c file with marshal function was generated:
 // glib-genmarshal --body --prefix=marshal marshal.list > gnome_mmkeys_marshal.c
 #include "gnome_mmkeys_marshal.h"
-#include "deadbeef.h"
 
 DB_functions_t* deadbeef = NULL;
-DB_plugin_t plugin_info = {
-    .type =          DB_PLUGIN_MISC, // type
-    .api_vmajor =    1, // api version major
-    .api_vminor =    1, // api version minor
-    .version_major = 1, // version major
-    .version_minor = 0, // version minor
-
-    .flags =         0, // unused
-    .reserved1 =     0, // unused
-    .reserved2 =     0, // unused
-    .reserved3 =     0, // unused
-
-    .id =            "gnome_mmkeys", // id
-    .name =          "Gnome multimedia keys support", // name
-    .descr =         "Adds support for Gnome multimedia keys (Prev, Stop, Pause/Play, Next).", // description
-    .copyright =     "Copyright (C) 2011 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>\n" // copyright
-                     "\n"
-                     "This program is free software: you can redistribute it and/or modify\n"
-                     "it under the terms of the GNU General Public License as published by\n"
-                     "the Free Software Foundation, either version 2 of the License, or\n"
-                     "(at your option) any later version.\n"
-                     "\n"
-                     "This program is distributed in the hope that it will be useful,\n"
-                     "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-                     "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-                     "GNU General Public License for more details.\n"
-                     "\n"
-                     "You should have received a copy of the GNU General Public License\n"
-                     "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n",
-    .website =       "", // website
-
-    .command =       NULL, // command interface function
-    .start =         NULL, // start function
-    .stop =          NULL, // stop function
-    .connect =       NULL, // connect function
-    .disconnect =    NULL, // disconnect function
-    .exec_cmdline =  NULL, // command line processing function
-    .get_actions =   NULL, // linked list of actions function
-    .message =       NULL, // message processing function
-    .configdialog =  NULL // config dialog function
-};
+DB_plugin_t plugin_info;
 
 ddb_event_t* play_event = NULL;
 ddb_event_t* pause_event = NULL;
@@ -171,6 +131,12 @@ void gnome_mmkeys_thread (void* context) {
 int gnome_mmkeys_start (void) {
     intptr_t thread_id = 0;
 
+    play_event = (*deadbeef).event_alloc(DB_EV_PLAY_CURRENT);
+    pause_event = (*deadbeef).event_alloc(DB_EV_PAUSE);
+    stop_event = (*deadbeef).event_alloc(DB_EV_STOP);
+    prev_event = (*deadbeef).event_alloc(DB_EV_PREV);
+    next_event = (*deadbeef).event_alloc(DB_EV_NEXT);
+
     thread_id = (*deadbeef).thread_start(gnome_mmkeys_thread, NULL);
     if (thread_id != 0)
         (*deadbeef).thread_detach(thread_id);
@@ -186,19 +152,50 @@ int gnome_mmkeys_stop (void) {
     return 0;
 }
 
-static const char* gnome_mmkeys_config = "property \"Enable\" checkbox gnome_mmkeys.enable 0;\n";
 
 DB_plugin_t* gnome_mmkeys_load (DB_functions_t* api) {
     deadbeef = api;
-
-    play_event = (*deadbeef).event_alloc(DB_EV_PLAY_CURRENT);
-    pause_event = (*deadbeef).event_alloc(DB_EV_PAUSE);
-    stop_event = (*deadbeef).event_alloc(DB_EV_STOP);
-    prev_event = (*deadbeef).event_alloc(DB_EV_PREV);
-    next_event = (*deadbeef).event_alloc(DB_EV_NEXT);
-
-    plugin_info.start = gnome_mmkeys_start;
-    plugin_info.stop = gnome_mmkeys_stop;
-    plugin_info.configdialog = gnome_mmkeys_config;
     return DB_PLUGIN(&plugin_info);
 }
+
+DB_plugin_t plugin_info = {
+    .type =          DB_PLUGIN_MISC, // type
+    .api_vmajor =    1, // api version major
+    .api_vminor =    1, // api version minor
+    .version_major = 1, // version major
+    .version_minor = 0, // version minor
+
+    .flags =         0, // unused
+    .reserved1 =     0, // unused
+    .reserved2 =     0, // unused
+    .reserved3 =     0, // unused
+
+    .id =            "gnome_mmkeys", // id
+    .name =          "Gnome multimedia keys support", // name
+    .descr =         "Adds support for Gnome multimedia keys (Prev, Stop, Pause/Play, Next).", // description
+    .copyright =     "Copyright (C) 2011 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>\n" // copyright
+                     "\n"
+                     "This program is free software: you can redistribute it and/or modify\n"
+                     "it under the terms of the GNU General Public License as published by\n"
+                     "the Free Software Foundation, either version 2 of the License, or\n"
+                     "(at your option) any later version.\n"
+                     "\n"
+                     "This program is distributed in the hope that it will be useful,\n"
+                     "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+                     "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+                     "GNU General Public License for more details.\n"
+                     "\n"
+                     "You should have received a copy of the GNU General Public License\n"
+                     "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n",
+    .website =       "", // website
+
+    .command =       NULL, // command interface function
+    .start =         gnome_mmkeys_start, // start function
+    .stop =          gnome_mmkeys_stop, // stop function
+    .connect =       NULL, // connect function
+    .disconnect =    NULL, // disconnect function
+    .exec_cmdline =  NULL, // command line processing function
+    .get_actions =   NULL, // linked list of actions function
+    .message =       NULL, // message processing function
+    .configdialog =  "property \"Enable\" checkbox gnome_mmkeys.enable 0;\n" // config dialog function
+};

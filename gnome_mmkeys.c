@@ -2,7 +2,7 @@
     This is a plugin for DeaDBeeF player.
     http://deadbeef.sourceforge.net/
 
-    Adds support for Gnome multimedia keys (Prev, Stop, Pause/Play, Next).
+    Adds support for Gnome (via DBus) multimedia keys (Prev, Stop, Pause/Play, Next).
 
     Copyright (C) 2011 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>
 
@@ -187,7 +187,7 @@ DB_plugin_t plugin_info = {
                      "\n"
                      "You should have received a copy of the GNU General Public License\n"
                      "along with this program.  If not, see <http://www.gnu.org/licenses/>.\n",
-    .website =       "", // website
+    .website =       "http://code.google.com/p/deadbeef-gnome-mmkeys", // website
 
     .command =       NULL, // command interface function
     .start =         gnome_mmkeys_start, // start function
@@ -199,3 +199,4 @@ DB_plugin_t plugin_info = {
     .message =       NULL, // message processing function
     .configdialog =  "property \"Enable\" checkbox gnome_mmkeys.enable 0;\n" // config dialog function
 };
+

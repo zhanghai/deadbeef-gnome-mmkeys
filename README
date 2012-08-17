@@ -21,7 +21,7 @@ $ sh make.sh
 
 To install:
 $ sh make.sh install
-(copies gnome_mmkeys.so file to /usr/lib/deadbeef/)
+(copies ddb_gnome_mmkeys.so file to /usr/lib/deadbeef/)
 
 
 To clean:

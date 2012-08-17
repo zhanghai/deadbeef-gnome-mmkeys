@@ -12,10 +12,10 @@ $ git clone https://code.google.com/p/deadbeef-gnome-mmkeys/
 
 
 To build:
-* In Ubuntu/Debian you will need gcc, libdbus-glib-1-dev and deadbeef-plugins-dev packages installed:
+* In Ubuntu/Debian you will need some packages:
 $ sudo apt-add-repository ppa:alexey-smirnov/deadbeef
 $ sudo apt-get update
-$ sudo apt-get install gcc libdbus-glib-1-dev deadbeef-plugins-dev
+$ sudo apt-get install tcc libglib2.0-dev libdbus-glib-1-dev deadbeef-plugins-dev
 
 $  sh build.sh
 
@@ -23,5 +23,5 @@ $  sh build.sh
 To install:
 
 $ sudo sh install.sh
-(copies .so file to /usr/lib/deadbeef/)
+(copies gnome_mmkeys.so file to /usr/lib/deadbeef/)
 

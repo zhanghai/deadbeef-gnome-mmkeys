@@ -36,14 +36,13 @@
 #include <stdio.h>
 #include <dbus/dbus-glib.h>
 #include <deadbeef/deadbeef.h>
-// gnome_mmkeys_marshal.h was built using
-// marshal.list file with one line:
-// VOID:STRING,STRING
-// and glib-genmarshal program:
-// glib-genmarshal --header --prefix=marshal marshal.list > gnome_mmkeys_marshal.h
-// also c file with marshal function was generated:
-// glib-genmarshal --body --prefix=marshal marshal.list > gnome_mmkeys_marshal.c
 #include "gnome_mmkeys_marshal.h"
+// gnome_mmkeys_marshal.h was created with glib-genmarshal program and
+// marshal.list file containing one line:
+// VOID:STRING,STRING
+// $ glib-genmarshal --header --prefix=marshal marshal.list > gnome_mmkeys_marshal.h
+// gnome_mmkeys_marshal.c file with marshal function was generated with:
+// $ glib-genmarshal --body --prefix=marshal marshal.list > gnome_mmkeys_marshal.c
 
 DB_functions_t* deadbeef = NULL;
 DB_plugin_t plugin_info;

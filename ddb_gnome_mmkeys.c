@@ -36,13 +36,7 @@
 #include <stdio.h>
 #include <dbus/dbus-glib.h>
 #include <deadbeef/deadbeef.h>
-#include "gnome_mmkeys_marshal.h"
-// gnome_mmkeys_marshal.h was created with glib-genmarshal program and
-// marshal.list file containing one line:
-// VOID:STRING,STRING
-// $ glib-genmarshal --header --prefix=marshal marshal.list > gnome_mmkeys_marshal.h
-// gnome_mmkeys_marshal.c file with marshal function was generated with:
-// $ glib-genmarshal --body --prefix=marshal marshal.list > gnome_mmkeys_marshal.c
+#include "ddb_gnome_mmkeys_marshal.h"
 
 DB_functions_t* deadbeef = NULL;
 DB_plugin_t plugin_info;
@@ -58,7 +52,7 @@ void process_key (DBusGProxy* dbus_proxy, const char* not_used, const char* key_
     int output_state = 0;
     gboolean is_playing = FALSE;
 
-    if ((*deadbeef).conf_get_int("gnome_mmkeys.enable", 0) == 0) {
+    if ((*deadbeef).conf_get_int("ddb_gnome_mmkeys.enable", 0) == 0) {
         return;
     }
 
@@ -71,7 +65,7 @@ void process_key (DBusGProxy* dbus_proxy, const char* not_used, const char* key_
         is_playing = TRUE;
     }
 
-//    g_print("gnome_mmkeys: key pressed: %s\n", key_pressed);
+//    g_print("ddb_gnome_mmkeys: key pressed: %s\n", key_pressed);
     if (g_strcmp0(key_pressed, "Play") == 0) {
         if (is_playing) {
             (*deadbeef).event_send(pause_event, 0, 0);
@@ -96,7 +90,7 @@ void process_key (DBusGProxy* dbus_proxy, const char* not_used, const char* key_
 #define DBUS_INTERFACE "org.gnome.SettingsDaemon.MediaKeys"
 #define DBUS_MEMBER "MediaPlayerKeyPressed"
 
-void gnome_mmkeys_thread (void* context) {
+void ddb_gnome_mmkeys_thread (void* context) {
     GError* dbus_error = NULL;
     DBusGConnection* dbus_connection = NULL;
     DBusGProxy* dbus_proxy = NULL;
@@ -104,7 +98,7 @@ void gnome_mmkeys_thread (void* context) {
 
     dbus_connection = dbus_g_bus_get(DBUS_BUS_SESSION, &dbus_error);
     if(dbus_connection == NULL) {
-        g_printerr("gnome_mmkeys: could not connect to dbus: %s\n", (*dbus_error).message);
+        g_printerr("ddb_gnome_mmkeys: could not connect to dbus: %s\n", (*dbus_error).message);
         if (dbus_error != NULL)
             g_error_free(dbus_error);
         (*deadbeef).thread_exit(NULL);
@@ -112,7 +106,7 @@ void gnome_mmkeys_thread (void* context) {
 
     dbus_proxy = dbus_g_proxy_new_for_name(dbus_connection, DBUS_SERVICE, DBUS_PATH, DBUS_INTERFACE);
     if(dbus_proxy == NULL) {
-        g_printerr("gnome_mmkeys: dbus: could not listen SettingsDaemon signals: %s\n", (*dbus_error).message);
+        g_printerr("ddb_gnome_mmkeys: dbus: could not listen SettingsDaemon signals: %s\n", (*dbus_error).message);
         if (dbus_error != NULL)
             g_error_free(dbus_error);
         (*deadbeef).thread_exit(NULL);
@@ -127,7 +121,7 @@ void gnome_mmkeys_thread (void* context) {
     (*deadbeef).thread_exit(NULL);
 }
 
-int gnome_mmkeys_start (void) {
+int ddb_gnome_mmkeys_start (void) {
     intptr_t thread_id = 0;
 
     play_event = (*deadbeef).event_alloc(DB_EV_PLAY_CURRENT);
@@ -136,13 +130,13 @@ int gnome_mmkeys_start (void) {
     prev_event = (*deadbeef).event_alloc(DB_EV_PREV);
     next_event = (*deadbeef).event_alloc(DB_EV_NEXT);
 
-    thread_id = (*deadbeef).thread_start(gnome_mmkeys_thread, NULL);
+    thread_id = (*deadbeef).thread_start(ddb_gnome_mmkeys_thread, NULL);
     if (thread_id != 0)
         (*deadbeef).thread_detach(thread_id);
     return 0;
 }
 
-int gnome_mmkeys_stop (void) {
+int ddb_gnome_mmkeys_stop (void) {
     (*deadbeef).event_free(play_event);
     (*deadbeef).event_free(pause_event);
     (*deadbeef).event_free(stop_event);
@@ -152,7 +146,7 @@ int gnome_mmkeys_stop (void) {
 }
 
 
-DB_plugin_t* gnome_mmkeys_load (DB_functions_t* api) {
+DB_plugin_t* ddb_gnome_mmkeys_load (DB_functions_t* api) {
     deadbeef = api;
     return DB_PLUGIN(&plugin_info);
 }
@@ -169,7 +163,7 @@ DB_plugin_t plugin_info = {
     .reserved2 =     0, // unused
     .reserved3 =     0, // unused
 
-    .id =            "gnome_mmkeys", // id
+    .id =            "ddb_gnome_mmkeys", // id
     .name =          "Gnome multimedia keys support", // name
     .descr =         "Adds support for Gnome multimedia keys (Prev, Stop, Pause/Play, Next).", // description
     .copyright =     "Copyright (C) 2011 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>\n" // copyright
@@ -189,13 +183,13 @@ DB_plugin_t plugin_info = {
     .website =       "http://code.google.com/p/deadbeef-gnome-mmkeys", // website
 
     .command =       NULL, // command interface function
-    .start =         gnome_mmkeys_start, // start function
-    .stop =          gnome_mmkeys_stop, // stop function
+    .start =         ddb_gnome_mmkeys_start, // start function
+    .stop =          ddb_gnome_mmkeys_stop, // stop function
     .connect =       NULL, // connect function
     .disconnect =    NULL, // disconnect function
     .exec_cmdline =  NULL, // command line processing function
     .get_actions =   NULL, // linked list of actions function
     .message =       NULL, // message processing function
-    .configdialog =  "property \"Enable\" checkbox gnome_mmkeys.enable 0;\n" // config dialog function
+    .configdialog =  "property \"Enable\" checkbox ddb_gnome_mmkeys.enable 0;\n" // config dialog function
 };
 

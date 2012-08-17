@@ -9,6 +9,7 @@ name='ddb_gnome_mmkeys'
     exit 0
   }
   [ "$1" = 'install' ] && {
+    [ -f ${name}.so ] || sh $0
     sudo cp ${name}.so /usr/lib/deadbeef/ &&
     sudo chmod 644 /usr/lib/deadbeef/${name}.so &&
     echo 'installation successful' || {

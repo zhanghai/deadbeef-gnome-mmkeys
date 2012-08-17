@@ -17,7 +17,8 @@ $ sudo apt-add-repository ppa:alexey-smirnov/deadbeef
 $ sudo apt-get update
 $ sudo apt-get install tcc libglib2.0-dev libdbus-glib-1-dev deadbeef-plugins-dev
 
-$  sh build.sh
+$ cd deadbeef-gnome-mmkeys
+$ sh build.sh
 
 
 To install:

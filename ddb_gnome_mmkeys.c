@@ -30,6 +30,7 @@
     http://dbus.freedesktop.org/doc/dbus-tutorial.html
     http://pragha.wikispaces.com/message/view/home/25294057
     http://www.vimtips.org/12/
+    http://stackoverflow.com/questions/5751276/compiling-c-program-with-dbus-header-files
 */
 
 #include <unistd.h>

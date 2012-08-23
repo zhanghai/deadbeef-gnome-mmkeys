@@ -4,7 +4,7 @@
 
     Adds support for Gnome (via DBus) multimedia keys (Prev, Stop, Pause/Play, Next).
 
-    Copyright (C) 2011 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>
+    Copyright (C) 2011-2012 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -53,12 +53,12 @@ void process_key (DBusGProxy* dbus_proxy, const char* not_used, const char* key_
     int output_state = 0;
     gboolean is_playing = FALSE;
 
-    if ((*deadbeef).conf_get_int("ddb_gnome_mmkeys.enable", 0) == 0) {
+    if ((*deadbeef).conf_get_int ("ddb_gnome_mmkeys.enable", 0) == 0) {
         return;
     }
 
-    output = (*deadbeef).get_output();
-    output_state = (*output).state();
+    output = (*deadbeef).get_output ();
+    output_state = (*output).state ();
     if (output_state == OUTPUT_STATE_STOPPED || output_state == OUTPUT_STATE_PAUSED) {
         is_playing = FALSE;
     }
@@ -66,23 +66,23 @@ void process_key (DBusGProxy* dbus_proxy, const char* not_used, const char* key_
         is_playing = TRUE;
     }
 
-//    g_print("ddb_gnome_mmkeys: key pressed: %s\n", key_pressed);
-    if (g_strcmp0(key_pressed, "Play") == 0) {
+//    g_print ("ddb_gnome_mmkeys: key pressed: %s\n", key_pressed);
+    if (g_strcmp0 (key_pressed, "Play") == 0) {
         if (is_playing) {
-            (*deadbeef).event_send(pause_event, 0, 0);
+            (*deadbeef).event_send (pause_event, 0, 0);
         }
         else {
-            (*deadbeef).event_send(play_event, 0, 0);
+            (*deadbeef).event_send (play_event, 0, 0);
         }
     }
-    else if (g_strcmp0(key_pressed, "Stop") == 0) {
-            (*deadbeef).event_send(stop_event, 0, 0);
+    else if (g_strcmp0 (key_pressed, "Stop") == 0) {
+            (*deadbeef).event_send (stop_event, 0, 0);
     }
-    else if (g_strcmp0(key_pressed, "Previous") == 0) {
-            (*deadbeef).event_send(prev_event, 0, 0);
+    else if (g_strcmp0 (key_pressed, "Previous") == 0) {
+            (*deadbeef).event_send (prev_event, 0, 0);
     }
-    else if (g_strcmp0(key_pressed, "Next") == 0) {
-            (*deadbeef).event_send(next_event, 0, 0);
+    else if (g_strcmp0 (key_pressed, "Next") == 0) {
+            (*deadbeef).event_send (next_event, 0, 0);
     }
 }
 
@@ -95,61 +95,61 @@ void ddb_gnome_mmkeys_thread (void* context) {
     GError* dbus_error = NULL;
     DBusGConnection* dbus_connection = NULL;
     DBusGProxy* dbus_proxy = NULL;
-    g_type_init();
+    g_type_init ();
 
-    dbus_connection = dbus_g_bus_get(DBUS_BUS_SESSION, &dbus_error);
-    if(dbus_connection == NULL) {
-        g_printerr("ddb_gnome_mmkeys: could not connect to dbus: %s\n", (*dbus_error).message);
+    dbus_connection = dbus_g_bus_get (DBUS_BUS_SESSION, &dbus_error);
+    if (dbus_connection == NULL) {
+        g_printerr ("ddb_gnome_mmkeys: could not connect to dbus: %s\n", (*dbus_error).message);
         if (dbus_error != NULL)
-            g_error_free(dbus_error);
-        (*deadbeef).thread_exit(NULL);
+            g_error_free (dbus_error);
+        (*deadbeef).thread_exit (NULL);
     }
 
-    dbus_proxy = dbus_g_proxy_new_for_name(dbus_connection, DBUS_SERVICE, DBUS_PATH, DBUS_INTERFACE);
-    if(dbus_proxy == NULL) {
-        g_printerr("ddb_gnome_mmkeys: dbus: could not listen SettingsDaemon signals: %s\n", (*dbus_error).message);
+    dbus_proxy = dbus_g_proxy_new_for_name (dbus_connection, DBUS_SERVICE, DBUS_PATH, DBUS_INTERFACE);
+    if (dbus_proxy == NULL) {
+        g_printerr ("ddb_gnome_mmkeys: dbus: could not listen SettingsDaemon signals: %s\n", (*dbus_error).message);
         if (dbus_error != NULL)
-            g_error_free(dbus_error);
-        (*deadbeef).thread_exit(NULL);
+            g_error_free (dbus_error);
+        (*deadbeef).thread_exit (NULL);
     }
 
-    dbus_g_object_register_marshaller(marshal_VOID__STRING_STRING, G_TYPE_NONE, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);
-    dbus_g_proxy_add_signal(dbus_proxy, DBUS_MEMBER, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);
-    dbus_g_proxy_connect_signal(dbus_proxy, DBUS_MEMBER, G_CALLBACK(process_key), dbus_connection, NULL);
+    dbus_g_object_register_marshaller (marshal_VOID__STRING_STRING, G_TYPE_NONE, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);
+    dbus_g_proxy_add_signal (dbus_proxy, DBUS_MEMBER, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INVALID);
+    dbus_g_proxy_connect_signal (dbus_proxy, DBUS_MEMBER, G_CALLBACK (process_key), dbus_connection, NULL);
 
     if (dbus_error != NULL)
-        g_error_free(dbus_error);
-    (*deadbeef).thread_exit(NULL);
+        g_error_free (dbus_error);
+    (*deadbeef).thread_exit (NULL);
 }
 
 int ddb_gnome_mmkeys_start (void) {
     intptr_t thread_id = 0;
 
-    play_event = (*deadbeef).event_alloc(DB_EV_PLAY_CURRENT);
-    pause_event = (*deadbeef).event_alloc(DB_EV_PAUSE);
-    stop_event = (*deadbeef).event_alloc(DB_EV_STOP);
-    prev_event = (*deadbeef).event_alloc(DB_EV_PREV);
-    next_event = (*deadbeef).event_alloc(DB_EV_NEXT);
+    play_event = (*deadbeef).event_alloc (DB_EV_PLAY_CURRENT);
+    pause_event = (*deadbeef).event_alloc (DB_EV_PAUSE);
+    stop_event = (*deadbeef).event_alloc (DB_EV_STOP);
+    prev_event = (*deadbeef).event_alloc (DB_EV_PREV);
+    next_event = (*deadbeef).event_alloc (DB_EV_NEXT);
 
-    thread_id = (*deadbeef).thread_start(ddb_gnome_mmkeys_thread, NULL);
+    thread_id = (*deadbeef).thread_start (ddb_gnome_mmkeys_thread, NULL);
     if (thread_id != 0)
-        (*deadbeef).thread_detach(thread_id);
+        (*deadbeef).thread_detach (thread_id);
     return 0;
 }
 
 int ddb_gnome_mmkeys_stop (void) {
-    (*deadbeef).event_free(play_event);
-    (*deadbeef).event_free(pause_event);
-    (*deadbeef).event_free(stop_event);
-    (*deadbeef).event_free(prev_event);
-    (*deadbeef).event_free(next_event);
+    (*deadbeef).event_free (play_event);
+    (*deadbeef).event_free (pause_event);
+    (*deadbeef).event_free (stop_event);
+    (*deadbeef).event_free (prev_event);
+    (*deadbeef).event_free (next_event);
     return 0;
 }
 
 
 DB_plugin_t* ddb_gnome_mmkeys_load (DB_functions_t* api) {
     deadbeef = api;
-    return DB_PLUGIN(&plugin_info);
+    return DB_PLUGIN (&plugin_info);
 }
 
 DB_plugin_t plugin_info = {
@@ -167,7 +167,7 @@ DB_plugin_t plugin_info = {
     .id =            "ddb_gnome_mmkeys", // id
     .name =          "Gnome multimedia keys support", // name
     .descr =         "Adds support for Gnome multimedia keys (Prev, Stop, Pause/Play, Next).", // description
-    .copyright =     "Copyright (C) 2011 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>\n" // copyright
+    .copyright =     "Copyright (C) 2011-2012 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>\n" // copyright
                      "\n"
                      "This program is free software: you can redistribute it and/or modify\n"
                      "it under the terms of the GNU General Public License as published by\n"

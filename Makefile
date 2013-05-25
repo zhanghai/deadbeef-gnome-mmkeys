@@ -3,7 +3,8 @@ INCLUDES = $(shell pkg-config --cflags gio-2.0 glib-2.0)
 LIBS = $(shell pkg-config --libs gio-2.0 glib-2.0)
 OPTIONS = -fPIC -shared
 NAME = ddb_gnome_mmkeys
-INSTALL_DIR = /usr/lib/deadbeef
+ROOTDIR = /
+INSTALL_DIR = usr/lib/deadbeef
 
 all: plugin
 
@@ -13,8 +14,8 @@ $(NAME).so: $(NAME).c
 	$(CC) $(INCLUDES) $(LIBS) $(OPTIONS) -o $(NAME).so $(NAME).c
 	
 install:
-	cp $(NAME).so $(INSTALL_DIR)
-	chmod 644 $(INSTALL_DIR)/$(NAME).so
+	mkdir -p $(ROOTDIR)$(INSTALL_DIR)
+	install -m 644 $(NAME).so $(ROOTDIR)$(INSTALL_DIR)
 
 clean:
 	rm -f $(NAME).so

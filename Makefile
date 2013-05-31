@@ -11,7 +11,7 @@ all: plugin
 plugin: $(NAME).so
 
 $(NAME).so: $(NAME).c
-	$(CC) $(INCLUDES) $(LIBS) $(OPTIONS) -o $(NAME).so $(NAME).c
+	$(CC) $(INCLUDES) $(OPTIONS) -o $(NAME).so $(NAME).c $(LIBS)
 	
 install:
 	mkdir -p $(ROOTDIR)$(INSTALL_DIR)

@@ -42,13 +42,8 @@
 #define NAME "ddb_gnome_mmkeys"
 #define DEBUG
 
-typedef struct ControlEvents_s {
-  ddb_event_t *play, *pause, *stop, *next, *prev;
-} ControlEvents;
-
 typedef struct DB_mmkeys_plugin_s {
   DB_plugin_t plugin;
-  ControlEvents events;
   DB_functions_t* deadbeef;
   GDBusProxy* proxy;
 } DB_mmkeys_plugin;
@@ -74,16 +69,16 @@ void process_key (GDBusProxy* dbus_proxy, const char* not_used, const char* key_
     
     if (strcmp (key, "Play") == 0) {
         if (state == OUTPUT_STATE_PLAYING) {
-            plugin.deadbeef->event_send (plugin.events.pause, 0, 0);
+            plugin.deadbeef->sendmessage (DB_EV_PAUSE, 0, 0, 0);
         } else {
-            plugin.deadbeef->event_send (plugin.events.play, 0, 0);
+            plugin.deadbeef->sendmessage (DB_EV_PLAY_CURRENT, 0, 0, 0);
         }
     } else if (strcmp (key, "Stop") == 0) {
-            plugin.deadbeef->event_send (plugin.events.stop, 0, 0);
+            plugin.deadbeef->sendmessage (DB_EV_STOP, 0, 0, 0);
     } else if (strcmp (key, "Previous") == 0) {
-            plugin.deadbeef->event_send (plugin.events.prev, 0, 0);
+            plugin.deadbeef->sendmessage (DB_EV_PREV, 0, 0, 0);
     } else if (strcmp (key, "Next") == 0) {
-            plugin.deadbeef->event_send (plugin.events.next, 0, 0);
+            plugin.deadbeef->sendmessage (DB_EV_NEXT, 0, 0, 0);
     }
 }
 
@@ -162,25 +157,17 @@ void ddb_gnome_mmkeys_connect_to_dbus () {
         g_error_free (dbus_error);
 }
 
+gboolean mmkeys_start_cb (gpointer ctx) {
+    ddb_gnome_mmkeys_connect_to_dbus();
+    return FALSE;
+}
 
 int ddb_gnome_mmkeys_start (void) {
-    plugin.events.play = plugin.deadbeef->event_alloc(DB_EV_PLAY_CURRENT);
-    plugin.events.pause = plugin.deadbeef->event_alloc(DB_EV_PAUSE);
-    plugin.events.stop = plugin.deadbeef->event_alloc(DB_EV_STOP);
-    plugin.events.prev = plugin.deadbeef->event_alloc(DB_EV_PREV);
-    plugin.events.next = plugin.deadbeef->event_alloc(DB_EV_NEXT);
-
-    ddb_gnome_mmkeys_connect_to_dbus();
+    g_idle_add (mmkeys_start_cb, NULL);
     return 0;
 }
 
 int ddb_gnome_mmkeys_stop (void) {
-    plugin.deadbeef->event_free(plugin.events.play);
-    plugin.deadbeef->event_free(plugin.events.pause);
-    plugin.deadbeef->event_free(plugin.events.stop);
-    plugin.deadbeef->event_free(plugin.events.prev);
-    plugin.deadbeef->event_free(plugin.events.next);
-    
     g_dbus_proxy_call (plugin.proxy,
 					   "ReleaseMediaPlayerKeys",
 					   g_variant_new ("(s)", "DeadBeef"),

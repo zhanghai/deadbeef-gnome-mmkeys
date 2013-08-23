@@ -129,14 +129,25 @@ void ddb_gnome_mmkeys_connect_to_dbus () {
       if (dbus_error != NULL) g_error_free (dbus_error);
     }
 
-    plugin.proxy = g_dbus_proxy_new_sync (connection,
-						       G_DBUS_PROXY_FLAGS_NONE,
-						       NULL,
-						       "org.gnome.SettingsDaemon", 
-						       "/org/gnome/SettingsDaemon/MediaKeys", 
-						       "org.gnome.SettingsDaemon.MediaKeys",
-						       NULL,
-						       &dbus_error);
+    if (plugin.deadbeef->conf_get_int ("ddb_gnome_mmkeys.mate", 0) == 1) {
+        plugin.proxy = g_dbus_proxy_new_sync (connection,
+                                G_DBUS_PROXY_FLAGS_NONE,
+                                NULL,
+                                "org.mate.SettingsDaemon", 
+                                "/org/mate/SettingsDaemon/MediaKeys", 
+                                "org.mate.SettingsDaemon.MediaKeys",
+                                NULL,
+                                &dbus_error);
+    }else{
+        plugin.proxy = g_dbus_proxy_new_sync (connection,
+                                G_DBUS_PROXY_FLAGS_NONE,
+                                NULL,
+                                "org.gnome.SettingsDaemon", 
+                                "/org/gnome/SettingsDaemon/MediaKeys", 
+                                "org.gnome.SettingsDaemon.MediaKeys",
+                                NULL,
+                                &dbus_error);
+    }
 						       
     if (plugin.proxy == NULL) {
         g_warning ("%s: dbus: could not sync with SettingsDaemon: %s\n", NAME, (*dbus_error).message);
@@ -229,7 +240,8 @@ DB_mmkeys_plugin plugin = {
       .exec_cmdline =  NULL, // command line processing function
       .get_actions =   NULL, // linked list of actions function
       .message =       NULL, // message processing function
-      .configdialog =  "property \"Enable\" checkbox ddb_gnome_mmkeys.enable 0;\n" // config dialog function
+      .configdialog =  "property \"Enable\" checkbox ddb_gnome_mmkeys.enable 0;\n"
+                       "property \"MATE support\" checkbox ddb_gnome_mmkeys.mate 0;\n" // config dialog function
     },
     .proxy = NULL,
     .deadbeef = NULL

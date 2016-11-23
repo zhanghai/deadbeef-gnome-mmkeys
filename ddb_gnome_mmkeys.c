@@ -35,6 +35,7 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 #include <gio/gio.h>
 #include <glib.h>
 #include <deadbeef/deadbeef.h>
@@ -240,7 +241,7 @@ DB_mmkeys_plugin plugin = {
       .exec_cmdline =  NULL, // command line processing function
       .get_actions =   NULL, // linked list of actions function
       .message =       NULL, // message processing function
-      .configdialog =  "property \"Enable\" checkbox ddb_gnome_mmkeys.enable 0;\n"
+      .configdialog =  "property \"Enable\" checkbox ddb_gnome_mmkeys.enable 1;\n"
                        "property \"MATE support\" checkbox ddb_gnome_mmkeys.mate 0;\n" // config dialog function
     },
     .proxy = NULL,

@@ -57,7 +57,7 @@ DB_mmkeys_plugin plugin;
 
 void process_key(GDBusProxy* dbus_proxy, const char* not_used,
                  const char* key_pressed, GVariant *parameters,
-                 gpointer user_data) {
+                 gpointer nothing) {
 
     char *key, *application;
     int state = 0;
@@ -88,8 +88,7 @@ void process_key(GDBusProxy* dbus_proxy, const char* not_used,
     }
 }
 
-void first_call_complete(GObject *proxy, GAsyncResult *res,
-                         DB_mmkeys_plugin *plugin) {
+void first_call_complete(GObject *proxy, GAsyncResult *res, gpointer nothing) {
 
     GError *error = NULL;
     GVariant *result;
@@ -105,7 +104,7 @@ void first_call_complete(GObject *proxy, GAsyncResult *res,
 #ifdef DEBUG
     g_debug("%s: Grab media player keys successfully\n", NAME);
 #endif
-    g_signal_connect(plugin->proxy, "g-signal", G_CALLBACK(process_key), NULL);
+    g_signal_connect(plugin.proxy, "g-signal", G_CALLBACK(process_key), NULL);
     g_variant_unref(result);
 }
 
@@ -176,7 +175,7 @@ void ddb_gnome_mmkeys_connect_to_dbus() {
                       -1,
                       NULL,
                       first_call_complete,
-                      &plugin);
+                      NULL);
 
     if (dbus_error) {
         g_error_free(dbus_error);

@@ -8,7 +8,7 @@ This plugin adds support for GNOME (via DBus) multimedia keys to DeaDBeeF player
 
 To get sources:
 * You will need git
-$ git clone https://github.com/barthez/deadbeef-gnome-mmkeys.git
+$ git clone https://github.com/DreaminginCodeZH/deadbeef-gnome-mmkeys.git
 
 To build:
 $ cd deadbeef-gnome-mmkeys

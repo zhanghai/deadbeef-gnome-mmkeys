@@ -152,7 +152,23 @@ void ddb_gnome_mmkeys_connect_to_dbus() {
                                 NULL,
                                 &dbus_error);
     } else {
+        /*
+         * The MediaKeys plugin for gnome-settings-daemon <= 3.24.1 used the
+         * bus name org.gnome.SettingsDaemon despite the documentation stating
+         * that org.gnome.SettingsDaemon.MediaKeys should be used.
+         * gnome-settings-daemon > 3.24.1 changed the bus name to match the
+         * documentation.
+         */
         plugin.proxy = g_dbus_proxy_new_sync(connection,
+                                G_DBUS_PROXY_FLAGS_NONE,
+                                NULL,
+                                "org.gnome.SettingsDaemon.MediaKeys",
+                                "/org/gnome/SettingsDaemon/MediaKeys",
+                                "org.gnome.SettingsDaemon.MediaKeys",
+                                NULL,
+                                &dbus_error);
+        if (plugin.proxy == NULL) {
+            plugin.proxy = g_dbus_proxy_new_sync(connection,
                                 G_DBUS_PROXY_FLAGS_NONE,
                                 NULL,
                                 "org.gnome.SettingsDaemon",
@@ -160,6 +176,7 @@ void ddb_gnome_mmkeys_connect_to_dbus() {
                                 "org.gnome.SettingsDaemon.MediaKeys",
                                 NULL,
                                 &dbus_error);
+        }
     }
     if (plugin.proxy == NULL) {
         g_warning("%s: dbus: could not sync with SettingsDaemon: %s\n", NAME,

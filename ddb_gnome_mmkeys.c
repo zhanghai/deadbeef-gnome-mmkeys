@@ -4,6 +4,7 @@
 
     Adds support for Gnome (via DBus) multimedia keys (Prev, Stop, Pause/Play, Next).
 
+    Copyright (C) 2016 Zhang Hai <dreaming.in.code.zh@gmail.com>
     Copyright (C) 2011-2012 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>
 
     This program is free software: you can redistribute it and/or modify

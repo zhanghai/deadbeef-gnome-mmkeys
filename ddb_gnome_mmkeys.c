@@ -4,8 +4,9 @@
 
     Adds support for GNOME (via DBus) multimedia keys (Prev, Stop, Pause/Play, Next).
 
-    Copyright (C) 2016 Zhang Hai <dreaming.in.code.zh@gmail.com>
     Copyright (C) 2011-2012 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>
+    Copyright (C) 2013-2016 Bartłomiej Bułat <bartek.bulat@gmail.com>
+    Copyright (C) 2016 Hai Zhang <dreaming.in.code.zh@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -225,7 +226,7 @@ static ddb_gnome_mmkeys_plugin_t plugin = {
         .descr = "Adds support for GNOME multimedia keys (Play/Pause, Stop, Prev, Next).",
         .copyright = "Copyright (C) 2011-2012 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>\n"
                      "Copyright (C) 2013-2016 Bartłomiej Bułat <bartek.bulat@gmail.com>\n"
-                     "Copyright (C) 2016 Zhang Hai <dreaming.in.code.zh@gmail.com>\n"
+                     "Copyright (C) 2016 Hai Zhang <dreaming.in.code.zh@gmail.com>\n"
                      "\n"
                      "This program is free software: you can redistribute it and/or modify\n"
                      "it under the terms of the GNU General Public License as published by\n"

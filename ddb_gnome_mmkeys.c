@@ -2,7 +2,7 @@
     This is a plugin for DeaDBeeF player.
     http://deadbeef.sourceforge.net/
 
-    Adds support for Gnome (via DBus) multimedia keys (Prev, Stop, Pause/Play, Next).
+    Adds support for GNOME (via DBus) multimedia keys (Prev, Stop, Pause/Play, Next).
 
     Copyright (C) 2016 Zhang Hai <dreaming.in.code.zh@gmail.com>
     Copyright (C) 2011-2012 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>
@@ -44,117 +44,91 @@
 
 #include <deadbeef/deadbeef.h>
 
-#define NAME "ddb_gnome_mmkeys"
+#define PLUGIN_ID "ddb_gnome_mmkeys"
 
 #define DEBUG
 
 typedef struct {
     DB_plugin_t plugin;
-    DB_functions_t* deadbeef;
-    GDBusProxy* proxy;
-} DB_mmkeys_plugin;
+    DB_functions_t *functions;
+    GDBusProxy *proxy;
+} ddb_gnome_mmkeys_plugin_t;
 
-DB_mmkeys_plugin plugin;
+static ddb_gnome_mmkeys_plugin_t plugin;
 
-void process_key(GDBusProxy* dbus_proxy, const char* not_used,
-                 const char* key_pressed, GVariant *parameters,
-                 gpointer nothing) {
-
-    char *key, *application;
-    int state = 0;
-
-    if (!plugin.deadbeef->conf_get_int("ddb_gnome_mmkeys.enable", 1)) {
-        return;
-    }
-
-    g_variant_get(parameters, "(ss)", &application, &key);
-#ifdef DEBUG
-    g_debug("%s: got media key '%s' for application '%s'\n", NAME, key,
-            application);
-#endif
-    state = plugin.deadbeef->get_output()->state();
-
-    if (strcmp(key, "Play") == 0) {
-        if (state == OUTPUT_STATE_PLAYING) {
-            plugin.deadbeef->sendmessage(DB_EV_PAUSE, 0, 0, 0);
-        } else {
-            plugin.deadbeef->sendmessage(DB_EV_PLAY_CURRENT, 0, 0, 0);
-        }
-    } else if (strcmp(key, "Stop") == 0) {
-            plugin.deadbeef->sendmessage(DB_EV_STOP, 0, 0, 0);
-    } else if (strcmp(key, "Previous") == 0) {
-            plugin.deadbeef->sendmessage(DB_EV_PREV, 0, 0, 0);
-    } else if (strcmp(key, "Next") == 0) {
-            plugin.deadbeef->sendmessage(DB_EV_NEXT, 0, 0, 0);
-    }
-}
-
-void first_call_complete(GObject *proxy, GAsyncResult *res, gpointer nothing) {
-
+static GDBusProxy *create_dbus_proxy(GDBusConnection *connection, const gchar *name,
+                                     const gchar *object_path, const gchar *interface_name) {
     GError *error = NULL;
-    GVariant *result;
-
-    result = g_dbus_proxy_call_finish(G_DBUS_PROXY(proxy), res, &error);
-    if (error) {
-        g_warning("%s, Unable to grab media player keys: %s", NAME,
-                  error->message);
-        g_clear_error(&error);
-        return;
-    }
-
-#ifdef DEBUG
-    g_debug("%s: Grab media player keys successfully\n", NAME);
-#endif
-    g_signal_connect(plugin.proxy, "g-signal", G_CALLBACK(process_key), NULL);
-    g_variant_unref(result);
-}
-
-void final_call_complete(GObject *proxy, GAsyncResult *res, gpointer nothing) {
-
-    GError *error = NULL;
-    GVariant *result;
-
-    result = g_dbus_proxy_call_finish(G_DBUS_PROXY(proxy), res, &error);
-    if (error) {
-        g_warning("%s: Unable to release media player keys: %s", NAME,
-                  error->message);
-        g_clear_error(&error);
-        return;
-    }
-
-#ifdef DEBUG
-    g_debug("%s: Release media player keys successfully\n", NAME);
-#endif
-    g_variant_unref(result);
-}
-
-GDBusProxy *create_dbus_proxy(GDBusConnection* connection, const gchar *name,
-                              const gchar *object_path, const gchar *interface_name) {
-    GError* error = NULL;
     GDBusProxy *proxy = g_dbus_proxy_new_sync(connection, G_DBUS_PROXY_FLAGS_NONE, NULL, name,
                                               object_path, interface_name, NULL, &error);
-    if (!proxy) {
-        g_warning("%s: could not create dbus proxy: %s\n", NAME, error->message);
-        g_error_free(error);
+    if (error) {
+        g_warning("%s: Failed to create DBus proxy: %s", PLUGIN_ID, error->message);
+        g_clear_error(&error);
+        return NULL;
     }
     return proxy;
 }
 
-void ddb_gnome_mmkeys_connect_to_dbus() {
+static void media_player_key_pressed_callback(GDBusProxy *proxy, gchar *sender_name,
+                                              gchar *signal_name, GVariant *parameters,
+                                              gpointer user_data) {
 
-    GError* dbus_error = NULL;
-    GDBusConnection* connection = NULL;
-
-    connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &dbus_error);
-    if (connection == NULL) {
-        g_warning("%s: could not connect to dbus: %s\n", NAME,
-                  dbus_error->message);
-        if (dbus_error) {
-            g_error_free(dbus_error);
-        }
+    if (!plugin.functions->conf_get_int("ddb_gnome_mmkeys.enable", 1)) {
+        return;
     }
 
-    if (plugin.deadbeef->conf_get_int("ddb_gnome_mmkeys.mate", 0) == 1) {
+    gchar *application;
+    gchar *key;
+    g_variant_get(parameters, "(ss)", &application, &key);
+#ifdef DEBUG
+    g_debug("%s: Media player key '%s' pressed for application '%s'", PLUGIN_ID, key,
+            application);
+#endif
+    if (strcmp(key, "Play") == 0) {
+        if (plugin.functions->get_output()->state() == OUTPUT_STATE_PLAYING) {
+            plugin.functions->sendmessage(DB_EV_PAUSE, 0, 0, 0);
+        } else {
+            plugin.functions->sendmessage(DB_EV_PLAY_CURRENT, 0, 0, 0);
+        }
+    } else if (strcmp(key, "Stop") == 0) {
+        plugin.functions->sendmessage(DB_EV_STOP, 0, 0, 0);
+    } else if (strcmp(key, "Previous") == 0) {
+        plugin.functions->sendmessage(DB_EV_PREV, 0, 0, 0);
+    } else if (strcmp(key, "Next") == 0) {
+        plugin.functions->sendmessage(DB_EV_NEXT, 0, 0, 0);
+    }
+}
+
+static void grab_media_player_keys_callback(GObject *proxy, GAsyncResult *res, gpointer user_data) {
+
+    GError *error = NULL;
+    GVariant *value = g_dbus_proxy_call_finish(G_DBUS_PROXY(proxy), res, &error);
+    if (error) {
+        g_warning("%s: Failed to grab media player keys: %s", PLUGIN_ID, error->message);
+        g_clear_error(&error);
+        return;
+    }
+    g_variant_unref(value);
+#ifdef DEBUG
+    g_debug("%s: Grabbed media player keys", PLUGIN_ID);
+#endif
+
+    g_signal_connect(plugin.proxy, "g-signal", G_CALLBACK(media_player_key_pressed_callback), NULL);
+}
+
+static void grab_media_player_keys() {
+
+    GError *error = NULL;
+    GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
+    if (error) {
+        g_warning("%s: Failed not connect to dbus: %s", PLUGIN_ID, error->message);
+        if (error) {
+            g_clear_error(&error);
+        }
+        return;
+    }
+
+    if (plugin.functions->conf_get_int("ddb_gnome_mmkeys.mate", 0) == 1) {
         plugin.proxy = create_dbus_proxy(connection, "org.mate.SettingsDaemon",
                                          "/org/mate/SettingsDaemon/MediaKeys",
                                          "org.mate.SettingsDaemon.MediaKeys");
@@ -169,70 +143,70 @@ void ddb_gnome_mmkeys_connect_to_dbus() {
         plugin.proxy = create_dbus_proxy(connection, "org.gnome.SettingsDaemon.MediaKeys",
                                          "/org/gnome/SettingsDaemon/MediaKeys",
                                          "org.gnome.SettingsDaemon.MediaKeys");
-        gboolean try_old_proxy_name = FALSE;
-        if (!plugin.proxy) {
-            try_old_proxy_name = TRUE;
-        } else {
+        if (plugin.proxy) {
             gchar *name_owner = g_dbus_proxy_get_name_owner(plugin.proxy);
-            if (name_owner) {
-                g_free(name_owner);
+            if (!name_owner) {
+                g_clear_object(&plugin.proxy);
             } else {
-                try_old_proxy_name = TRUE;
+                g_free(name_owner);
             }
         }
-        if (try_old_proxy_name) {
-            if (plugin.proxy) {
-                g_object_unref(plugin.proxy);
-            }
+        if (!plugin.proxy) {
             plugin.proxy = create_dbus_proxy(connection, "org.gnome.SettingsDaemon",
                                              "/org/gnome/SettingsDaemon/MediaKeys",
                                              "org.gnome.SettingsDaemon.MediaKeys");
         }
     }
-
-    g_dbus_proxy_call(plugin.proxy,
-                      "GrabMediaPlayerKeys",
-                      g_variant_new("(su)", "DeadBeef", 0),
-                      G_DBUS_CALL_FLAGS_NONE,
-                      -1,
-                      NULL,
-                      first_call_complete,
-                      NULL);
-
-    if (dbus_error) {
-        g_error_free(dbus_error);
+    g_clear_object(&connection);
+    if (!plugin.proxy) {
+        return;
     }
+
+    g_dbus_proxy_call(plugin.proxy, "GrabMediaPlayerKeys", g_variant_new("(su)", "DeadBeef", 0),
+                      G_DBUS_CALL_FLAGS_NONE, -1, NULL, grab_media_player_keys_callback, NULL);
 }
 
-gboolean mmkeys_start_cb(gpointer nothing) {
-    ddb_gnome_mmkeys_connect_to_dbus();
+static void release_media_player_keys_callback(GObject *source_object, GAsyncResult *res,
+                                               gpointer user_data) {
+    GDBusProxy *proxy = G_DBUS_PROXY(source_object);
+    GError *error = NULL;
+    GVariant *value = g_dbus_proxy_call_finish(proxy, res, &error);
+    if (error) {
+        g_warning("%s: Failed to release media player keys: %s", PLUGIN_ID, error->message);
+        g_clear_error(&error);
+        return;
+    }
+    g_variant_unref(value);
+#ifdef DEBUG
+    g_debug("%s: Released media player keys", PLUGIN_ID);
+#endif
+}
+
+static void release_media_player_keys() {
+    if (!plugin.proxy) {
+        return;
+    }
+    g_dbus_proxy_call(plugin.proxy, "ReleaseMediaPlayerKeys", g_variant_new("(s)", "DeadBeef"),
+                      G_DBUS_CALL_FLAGS_NONE, -1, NULL, release_media_player_keys_callback, NULL);
+    g_clear_object(&plugin.proxy);
+}
+
+static gboolean grab_media_player_keys_function(gpointer user_data) {
+    grab_media_player_keys();
     return FALSE;
 }
 
-int ddb_gnome_mmkeys_start() {
-    g_idle_add(mmkeys_start_cb, NULL);
+static int plugin_start() {
+    g_idle_add(grab_media_player_keys_function, NULL);
     return 0;
 }
 
-int ddb_gnome_mmkeys_stop() {
-    g_dbus_proxy_call(plugin.proxy,
-                      "ReleaseMediaPlayerKeys",
-                      g_variant_new("(s)", "DeadBeef"),
-                      G_DBUS_CALL_FLAGS_NONE,
-                      -1,
-                      NULL,
-                      (GAsyncReadyCallback) final_call_complete,
-                      NULL);
-    plugin.proxy = NULL;
+static int plugin_stop() {
+    release_media_player_keys();
     return 0;
 }
 
-DB_plugin_t* ddb_gnome_mmkeys_load(DB_functions_t* api) {
-    plugin.deadbeef = api;
-    return DB_PLUGIN(&plugin);
-}
-
-DB_mmkeys_plugin plugin = {
+static ddb_gnome_mmkeys_plugin_t plugin = {
     .plugin = {
 
         .type = DB_PLUGIN_MISC,
@@ -246,9 +220,9 @@ DB_mmkeys_plugin plugin = {
         .reserved2 = 0, // unused
         .reserved3 = 0, // unused
 
-        .id = "ddb_gnome_mmkeys",
-        .name = "Gnome multimedia keys support",
-        .descr = "Adds support for Gnome multimedia keys (Prev, Stop, Pause/Play, Next).",
+        .id = PLUGIN_ID,
+        .name = "GNOME multimedia keys support",
+        .descr = "Adds support for GNOME multimedia keys (Play/Pause, Stop, Prev, Next).",
         .copyright = "Copyright (C) 2011-2012 Ruslan Khusnullin <ruslan.khusnullin@gmail.com>\n"
                      "Copyright (C) 2013-2016 Bartłomiej Bułat <bartek.bulat@gmail.com>\n"
                      "Copyright (C) 2016 Zhang Hai <dreaming.in.code.zh@gmail.com>\n"
@@ -268,8 +242,8 @@ DB_mmkeys_plugin plugin = {
         .website = "https://github.com/DreaminginCodeZH/deadbeef-gnome-mmkeys",
 
         .command = NULL,
-        .start = ddb_gnome_mmkeys_start,
-        .stop = ddb_gnome_mmkeys_stop,
+        .start = plugin_start,
+        .stop = plugin_stop,
         .connect = NULL,
         .disconnect = NULL,
         .exec_cmdline = NULL,
@@ -278,6 +252,11 @@ DB_mmkeys_plugin plugin = {
         .configdialog = "property \"Enable\" checkbox ddb_gnome_mmkeys.enable 1;\n"
                         "property \"MATE support\" checkbox ddb_gnome_mmkeys.mate 0;\n"
     },
-    .proxy = NULL,
-    .deadbeef = NULL
+    .functions = NULL,
+    .proxy = NULL
 };
+
+DB_plugin_t *ddb_gnome_mmkeys_load(DB_functions_t *api) {
+    plugin.functions = api;
+    return &plugin.plugin;
+}

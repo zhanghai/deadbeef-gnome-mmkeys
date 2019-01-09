@@ -7,5 +7,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 find_package(GLIB REQUIRED gio)
 
 add_library(ddb_gnome_mmkeys SHARED ddb_gnome_mmkeys.c)
+set_target_properties(ddb_gnome_mmkeys PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(ddb_gnome_mmkeys PRIVATE ${GLIB_INCLUDE_DIRS})
 target_link_libraries(ddb_gnome_mmkeys PRIVATE ${GLIB_LIBRARIES} ${GLIB_GIO_LIBRARIES})

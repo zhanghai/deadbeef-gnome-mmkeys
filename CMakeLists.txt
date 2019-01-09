@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 project(deadbeef-gnome-mmkeys C)
 
-#set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 99)
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 find_package(GLIB REQUIRED gio)

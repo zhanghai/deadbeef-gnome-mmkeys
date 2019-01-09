@@ -128,6 +128,18 @@ void final_call_complete(GObject *proxy, GAsyncResult *res, gpointer nothing) {
     g_variant_unref(result);
 }
 
+GDBusProxy *create_dbus_proxy(GDBusConnection* connection, const gchar *name,
+                              const gchar *object_path, const gchar *interface_name) {
+    GError* error = NULL;
+    GDBusProxy *proxy = g_dbus_proxy_new_sync(connection, G_DBUS_PROXY_FLAGS_NONE, NULL, name,
+                                              object_path, interface_name, NULL, &error);
+    if (!proxy) {
+        g_warning("%s: could not create dbus proxy: %s\n", NAME, error->message);
+        g_error_free(error);
+    }
+    return proxy;
+}
+
 void ddb_gnome_mmkeys_connect_to_dbus() {
 
     GError* dbus_error = NULL;
@@ -143,14 +155,9 @@ void ddb_gnome_mmkeys_connect_to_dbus() {
     }
 
     if (plugin.deadbeef->conf_get_int("ddb_gnome_mmkeys.mate", 0) == 1) {
-        plugin.proxy = g_dbus_proxy_new_sync(connection,
-                                G_DBUS_PROXY_FLAGS_NONE,
-                                NULL,
-                                "org.mate.SettingsDaemon",
-                                "/org/mate/SettingsDaemon/MediaKeys",
-                                "org.mate.SettingsDaemon.MediaKeys",
-                                NULL,
-                                &dbus_error);
+        plugin.proxy = create_dbus_proxy(connection, "org.mate.SettingsDaemon",
+                                         "/org/mate/SettingsDaemon/MediaKeys",
+                                         "org.mate.SettingsDaemon.MediaKeys");
     } else {
         /*
          * The MediaKeys plugin for gnome-settings-daemon <= 3.24.1 used the
@@ -159,30 +166,27 @@ void ddb_gnome_mmkeys_connect_to_dbus() {
          * gnome-settings-daemon > 3.24.1 changed the bus name to match the
          * documentation.
          */
-        plugin.proxy = g_dbus_proxy_new_sync(connection,
-                                G_DBUS_PROXY_FLAGS_NONE,
-                                NULL,
-                                "org.gnome.SettingsDaemon.MediaKeys",
-                                "/org/gnome/SettingsDaemon/MediaKeys",
-                                "org.gnome.SettingsDaemon.MediaKeys",
-                                NULL,
-                                &dbus_error);
-        if (plugin.proxy == NULL) {
-            plugin.proxy = g_dbus_proxy_new_sync(connection,
-                                G_DBUS_PROXY_FLAGS_NONE,
-                                NULL,
-                                "org.gnome.SettingsDaemon",
-                                "/org/gnome/SettingsDaemon/MediaKeys",
-                                "org.gnome.SettingsDaemon.MediaKeys",
-                                NULL,
-                                &dbus_error);
+        plugin.proxy = create_dbus_proxy(connection, "org.gnome.SettingsDaemon.MediaKeys",
+                                         "/org/gnome/SettingsDaemon/MediaKeys",
+                                         "org.gnome.SettingsDaemon.MediaKeys");
+        gboolean try_old_proxy_name = FALSE;
+        if (!plugin.proxy) {
+            try_old_proxy_name = TRUE;
+        } else {
+            gchar *name_owner = g_dbus_proxy_get_name_owner(plugin.proxy);
+            if (name_owner) {
+                g_free(name_owner);
+            } else {
+                try_old_proxy_name = TRUE;
+            }
         }
-    }
-    if (plugin.proxy == NULL) {
-        g_warning("%s: dbus: could not sync with SettingsDaemon: %s\n", NAME,
-                  dbus_error->message);
-        if (dbus_error) {
-            g_error_free(dbus_error);
+        if (try_old_proxy_name) {
+            if (plugin.proxy) {
+                g_object_unref(plugin.proxy);
+            }
+            plugin.proxy = create_dbus_proxy(connection, "org.gnome.SettingsDaemon",
+                                             "/org/gnome/SettingsDaemon/MediaKeys",
+                                             "org.gnome.SettingsDaemon.MediaKeys");
         }
     }
 

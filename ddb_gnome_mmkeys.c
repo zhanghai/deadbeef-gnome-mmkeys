@@ -57,13 +57,14 @@ typedef struct {
 
 static ddb_gnome_mmkeys_plugin_t plugin;
 
-static GDBusProxy *create_dbus_proxy(GDBusConnection *connection, const gchar *name,
-                                     const gchar *object_path, const gchar *interface_name) {
+static GDBusProxy *create_dbus_proxy(const gchar *name, const gchar *object_path,
+                                     const gchar *interface_name) {
     GError *error = NULL;
-    GDBusProxy *proxy = g_dbus_proxy_new_sync(connection, G_DBUS_PROXY_FLAGS_NONE, NULL, name,
-                                              object_path, interface_name, NULL, &error);
+    GDBusProxy *proxy = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE,
+                                                      NULL, name, object_path, interface_name, NULL,
+                                                      &error);
     if (error) {
-        g_warning("%s: Failed to create DBus proxy: %s", PLUGIN_ID, error->message);
+        g_warning("%s: Failed to create DBus proxy for %s: %s", PLUGIN_ID, name, error->message);
         g_clear_error(&error);
         return NULL;
     }
@@ -116,18 +117,8 @@ static void grab_media_player_keys_callback(GObject *proxy, GAsyncResult *res, g
 
 static void grab_media_player_keys() {
 
-    GError *error = NULL;
-    GDBusConnection *connection = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
-    if (error) {
-        g_warning("%s: Failed not connect to dbus: %s", PLUGIN_ID, error->message);
-        if (error) {
-            g_clear_error(&error);
-        }
-        return;
-    }
-
     if (plugin.functions->conf_get_int("ddb_gnome_mmkeys.mate", 0) == 1) {
-        plugin.proxy = create_dbus_proxy(connection, "org.mate.SettingsDaemon",
+        plugin.proxy = create_dbus_proxy("org.mate.SettingsDaemon",
                                          "/org/mate/SettingsDaemon/MediaKeys",
                                          "org.mate.SettingsDaemon.MediaKeys");
     } else {
@@ -138,7 +129,7 @@ static void grab_media_player_keys() {
          * gnome-settings-daemon > 3.24.1 changed the bus name to match the
          * documentation.
          */
-        plugin.proxy = create_dbus_proxy(connection, "org.gnome.SettingsDaemon.MediaKeys",
+        plugin.proxy = create_dbus_proxy("org.gnome.SettingsDaemon.MediaKeys",
                                          "/org/gnome/SettingsDaemon/MediaKeys",
                                          "org.gnome.SettingsDaemon.MediaKeys");
         if (plugin.proxy) {
@@ -150,12 +141,11 @@ static void grab_media_player_keys() {
             }
         }
         if (!plugin.proxy) {
-            plugin.proxy = create_dbus_proxy(connection, "org.gnome.SettingsDaemon",
+            plugin.proxy = create_dbus_proxy("org.gnome.SettingsDaemon",
                                              "/org/gnome/SettingsDaemon/MediaKeys",
                                              "org.gnome.SettingsDaemon.MediaKeys");
         }
     }
-    g_clear_object(&connection);
     if (!plugin.proxy) {
         return;
     }

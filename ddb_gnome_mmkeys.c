@@ -101,7 +101,6 @@ static void media_player_key_pressed_callback(GDBusProxy *proxy, gchar *sender_n
 }
 
 static void grab_media_player_keys_callback(GObject *proxy, GAsyncResult *res, gpointer user_data) {
-
     GError *error = NULL;
     GVariant *value = g_dbus_proxy_call_finish(G_DBUS_PROXY(proxy), res, &error);
     if (error) {
@@ -113,8 +112,6 @@ static void grab_media_player_keys_callback(GObject *proxy, GAsyncResult *res, g
 #ifdef DEBUG
     g_debug("%s: Grabbed media player keys", PLUGIN_ID);
 #endif
-
-    g_signal_connect(plugin.proxy, "g-signal", G_CALLBACK(media_player_key_pressed_callback), NULL);
 }
 
 static void grab_media_player_keys() {
@@ -163,6 +160,8 @@ static void grab_media_player_keys() {
         return;
     }
 
+    g_signal_connect(plugin.proxy, "g-signal", G_CALLBACK(media_player_key_pressed_callback), NULL);
+
     g_dbus_proxy_call(plugin.proxy, "GrabMediaPlayerKeys", g_variant_new("(su)", "DeadBeef", 0),
                       G_DBUS_CALL_FLAGS_NONE, -1, NULL, grab_media_player_keys_callback, NULL);
 }
@@ -184,9 +183,11 @@ static void release_media_player_keys_callback(GObject *source_object, GAsyncRes
 }
 
 static void release_media_player_keys() {
+
     if (!plugin.proxy) {
         return;
     }
+
     g_dbus_proxy_call(plugin.proxy, "ReleaseMediaPlayerKeys", g_variant_new("(s)", "DeadBeef"),
                       G_DBUS_CALL_FLAGS_NONE, -1, NULL, release_media_player_keys_callback, NULL);
     g_clear_object(&plugin.proxy);
